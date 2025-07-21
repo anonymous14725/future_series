@@ -36,6 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   timeago: ^3.7.1
   supabase_flutter: ^2.9.1
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.jpg"
 
 dev_dependencies:
   flutter_test:
