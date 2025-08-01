@@ -56,6 +56,7 @@ dependencies:
   flutter_downloader: ^1.12.0
   syncfusion_flutter_pdfviewer: ^30.1.42
   permission_handler: ^12.0.1
+  shorebird_code_push: ^2.0.4
   
 flutter_launcher_icons:
   android: true
@@ -83,6 +84,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - shorebird.yaml
 
   # To add assets to your application, add an assets section, like this:
   # assets:
