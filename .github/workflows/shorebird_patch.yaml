@@ -1,0 +1,49 @@
+# نام Workflow
+name: Create Shorebird Patch
+
+# این workflow چه زمانی اجرا شود؟
+# ما آن را طوری تنظیم می‌کنیم که با هر push به branch 'main' اجرا شود.
+on:
+  push:
+    branches:
+      - main
+
+# تعریف Job ها (کارها)
+jobs:
+  # یک job به نام 'build' تعریف می‌کنیم
+  build:
+    # این job روی آخرین نسخه اوبونتو اجرا خواهد شد
+    runs-on: ubuntu-latest
+
+    # مراحل اجرای job
+    steps:
+      # 1. کدهای ریپازیتوری را دانلود می‌کند
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Shorebird CLI را نصب می‌کند
+      - name: Install Shorebird
+        uses: shorebird-dev/setup-shorebird@v1
+        with:
+          version: '1.2.0' # از آخرین نسخه پایدار استفاده کنید
+
+      # 3. یک release اولیه می‌سازد (فقط اگر اولین بار است)
+      # این کار برای اندروید یک AAB و برای iOS یک IPA می‌سازد که باید در استورها منتشر کنید.
+      # شما باید اولین نسخه را به صورت دستی در استورها آپلود کنید.
+      # دستور patch بدون وجود یک release اولیه کار نمی‌کند.
+      # با افزودن `|| true`، اگر release از قبل وجود داشته باشد، این مرحله با موفقیت رد می‌شود.
+      - name: Build initial release (if not exists)
+        run: |
+          shorebird release android -- --flavor prod || true
+          shorebird release ios -- --flavor prod || true
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # 4. یک پچ جدید می‌سازد و آن را منتشر می‌کند
+      - name: Build and deploy patch
+        run: |
+          shorebird patch android -- --flavor prod
+          shorebird patch ios -- --flavor prod
+        env:
+          # SHOREBIRD_TOKEN از رازهای گیت‌هاب خوانده می‌شود
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
