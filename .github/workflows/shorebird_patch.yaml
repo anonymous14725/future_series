@@ -11,28 +11,34 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      # --- بخش جدید برای قفل کردن نسخه فلاتر ---
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.6' # <<< نسخه فلاتر محلی خود را اینجا قرار دهید
+          channel: 'stable'
+          cache: true
+      # ----------------------------------------
 
       - name: Install Shorebird
         uses: shorebirdtech/setup-shorebird@v1
 
-      # --- بخش جدید برای ایجاد و استفاده از کلید امضا ---
       - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
         
       - name: Create key.properties file
         run: |
-          echo "storeFile=upload-keystore.jks" > android/key.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-      # --------------------------------------------------
 
-      - name: Build and deploy release/patch
+      - name: Build and deploy
         run: |
-          # ابتدا یک release می‌سازیم (اگر وجود نداشت، ساخته می‌شود)
-          shorebird release android -- --no-shrink || true
-          # سپس پچ را می‌سازیم
-          shorebird patch android -- --no-shrink
+          # اجرای `pub get` قبل از بیلد همیشه ایده خوبی است
+          flutter pub get
+          # حالا بیلد را با Shorebird اجرا می‌کنیم
+          shorebird release android || true
+          shorebird patch android
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
