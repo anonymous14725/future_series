@@ -1,37 +1,38 @@
-# نام Workflow
-name: Create Shorebird Patch
+name: Build and Deploy
 
-# این workflow چه زمانی اجرا شود؟
 on:
   push:
     branches:
-      - main # یا master، بستگی به نام branch اصلی شما دارد
+      - main
 
-# تعریف Job ها
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. کدهای ریپازیتوری را دانلود می‌کند
       - name: Checkout repository
-        uses: actions/checkout@v4 # به‌روزرسانی به نسخه جدیدتر
+        uses: actions/checkout@v4
 
-      # ===================== این خط کلیدی و اصلاح شده است =====================
-      # ما از نام صحیح سازمان 'shorebirdtech' استفاده می‌کنیم
       - name: Install Shorebird
         uses: shorebirdtech/setup-shorebird@v1
-      # ======================================================================
 
-      # 3. یک release اولیه می‌سازد (این بخش برای پچ‌های بعدی لازم است)
-      # با افزودن `|| true`، اگر release از قبل وجود داشته باشد، این مرحله با موفقیت رد می‌شود.
-      - name: Build initial release (if not exists)
-        run: shorebird release android || true
-        env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+      # --- بخش جدید برای ایجاد و استفاده از کلید امضا ---
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+        
+      - name: Create key.properties file
+        run: |
+          echo "storeFile=upload-keystore.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+      # --------------------------------------------------
 
-      # 4. یک پچ جدید می‌سازد و آن را برای کاربران منتشر می‌کند
-      - name: Build and deploy patch
-        run: shorebird patch android
+      - name: Build and deploy release/patch
+        run: |
+          # ابتدا یک release می‌سازیم (اگر وجود نداشت، ساخته می‌شود)
+          shorebird release android -- --no-shrink || true
+          # سپس پچ را می‌سازیم
+          shorebird patch android -- --no-shrink
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
