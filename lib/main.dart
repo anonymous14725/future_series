@@ -1,17 +1,28 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:context_menus/context_menus.dart';
 import './pages/splash_page.dart';
 import './providers/theme_provider.dart'; // Import our new theme provider
 
 // Keep these as they are correct
 import './background_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import './utils/notification_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await FlutterDownloader.initialize(
+    debug: true, // Set to false in release builds
+  );
+
+  final themeProvider = ThemeProvider();
+
+  await themeProvider.loadPreferences();
   
   await AwesomeNotifications().initialize(
     'resource://mipmap/ic_launcher',
@@ -34,29 +45,35 @@ Future<void> main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnY25ydGttYW1tdmluZGh1aWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxMTU5MTEsImV4cCI6MjA2ODY5MTkxMX0.IgLDs8oLqw38ib5fgRg31-WYii148U3pHesJaEwdubw',
   );
 
+  AwesomeNotifications().setListeners(
+    onActionReceivedMethod: NotificationController.onActionReceivedMethod,
+  );
+
+
   await initializeBackgroundService();
   
   runApp(// Wrap the entire app with our ThemeProvider
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    ChangeNotifierProvider.value(
+      value: themeProvider,
       child: const MyApp(),
     ));
 }
 
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
-
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
       isForegroundMode: true,
-      autoStart: true,
+      autoStart: true, // This ensures the service is always ready
     ),
     iosConfiguration: IosConfiguration(
       autoStart: true,
       onForeground: onStart,
     ),
   );
+  // We call startService to ensure it's running. It's safe to call this.
+  service.startService(); 
 }
 
 class MyApp extends StatelessWidget {
@@ -68,6 +85,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          builder: (context, child) => ContextMenuOverlay(child: child!),
           debugShowCheckedModeBanner: false,
           title: 'Future Series Chat',
           

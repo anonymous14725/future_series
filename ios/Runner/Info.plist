@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NS_PHOTO_LIBRARY_USAGE_DESCRIPTION</key>
+	<string>This app needs access to your photo library to let you select a profile picture.</string>
+	<key>NS_CAMERA_USAGE_DESCRIPTION</key>
+	<string>This app needs access to your camera to let you take a new profile picture.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -45,5 +49,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to upload pictures.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app does not require microphone access.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to take and upload pictures.</string>
 </dict>
 </plist>
